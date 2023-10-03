@@ -79,7 +79,7 @@ def train(args):
     reward_scale = config.getfloat('TRAIN_CONFIG', 'reward_scale')
 
     # init env
-    env = gym.make('merge-multi-agent-v1')
+    env = gym.make('merge-multi-agent-v0')
     env.config['seed'] = config.getint('ENV_CONFIG', 'seed')
     env.config['simulation_frequency'] = config.getint('ENV_CONFIG', 'simulation_frequency')
     env.config['duration'] = config.getint('ENV_CONFIG', 'duration')

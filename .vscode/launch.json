@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python Debug",
+        "type": "python",
+        "request": "launch",
+        "program": "${file}",
+        "args": ["--env-config=highway", "--config=qmix"],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "purpose": ["debug-in-terminal"],
+        "justMyCode": false
+      }
+    ]
+  }

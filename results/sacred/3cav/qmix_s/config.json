@@ -18,7 +18,7 @@
   "checkpoint_path_q_adv": "",
   "critic_lr": 0.005,
   "double_q": true,
-  "env": "merge-multi-agent-v1",
+  "env": "merge-multi-agent-v0",
   "env_args": {
     "COLLISION_REWARD": 200,
     "HEADWAY_COST": 4,

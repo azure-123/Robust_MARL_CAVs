@@ -1,4 +1,4 @@
-env: merge-multi-agent-v1
+env: merge-multi-agent-v0
 
 env_args:
   seed: 0

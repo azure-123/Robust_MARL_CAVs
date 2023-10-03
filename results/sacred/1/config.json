@@ -1,5 +1,5 @@
 {
-  "Number_attack": 0,
+  "Number_attack": 3,
   "action_selector": "epsilon_greedy",
   "adv_batch_size": 32,
   "adv_batch_size_run": 1,
@@ -18,7 +18,7 @@
   "checkpoint_path_q_adv": "",
   "critic_lr": 0.005,
   "double_q": true,
-  "env": "merge-multi-agent-v1",
+  "env": "merge-multi-agent-v0",
   "env_args": {
     "COLLISION_REWARD": 200,
     "HEADWAY_COST": 4,
@@ -33,7 +33,7 @@
     "safety_guarantee": false,
     "seed": 0,
     "simulation_frequency": 15,
-    "traffic_density": 4
+    "traffic_density": 2
   },
   "epsilon_anneal_time": 50000,
   "epsilon_ball": 0.1,
@@ -48,7 +48,7 @@
   "learner": "q_learner",
   "learner_log_interval": 1000,
   "load_step": 0,
-  "local_results_path": "results/",
+  "local_results_path": "./results/",
   "log_interval": 1000,
   "lr": 0.005,
   "mac": "basic_mac",
@@ -66,8 +66,8 @@
   "save_model": true,
   "save_model_interval": 200000,
   "save_replay": false,
-  "seed": 910914569,
-  "t_max": 6050000,
+  "seed": 161145068,
+  "t_max": 2050000,
   "target_update_interval": 200,
   "test_greedy": true,
   "test_interval": 1000,

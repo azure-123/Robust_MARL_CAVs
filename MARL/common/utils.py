@@ -30,7 +30,7 @@ class AddBias(nn.Module):
 
 
 def index_to_one_hot(index, dim):
-    if isinstance(index, np.int) or isinstance(index, np.int64):
+    if isinstance(index, np.int) or isinstance(index, np.int64) or isinstance(index, np.int32):
         one_hot = np.zeros(dim)
         one_hot[index] = 1.
     else:
