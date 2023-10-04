@@ -44,7 +44,14 @@
       ]
     ]
   },
-  "heartbeat": "2023-10-03T09:06:05.844743",
+  "fail_trace": [
+    "Traceback (most recent call last):\n",
+    "  File \"D:\\Users\\a2ure\\miniconda3\\envs\\marl_cav\\lib\\site-packages\\sacred\\config\\captured_function.py\", line 42, in captured_function\n    result = wrapped(*args, **kwargs)\n",
+    "  File \"main.py\", line 36, in my_main\n    run(_run, config, _log)\n",
+    "  File \"D:\\college\\reinforcement_learning\\MARL_CAVs-main\\Robust_MARL_CAVs\\QMIX\\run.py\", line 63, in run\n    os._exit(os.EX_OK)\n",
+    "AttributeError: module 'os' has no attribute 'EX_OK'\n"
+  ],
+  "heartbeat": "2023-10-03T17:52:00.552995",
   "host": {
     "ENV": {},
     "cpu": "Unknown",
@@ -96,5 +103,6 @@
   "resources": [],
   "result": null,
   "start_time": "2023-10-01T17:27:21.422122",
-  "status": "RUNNING"
+  "status": "FAILED",
+  "stop_time": "2023-10-03T17:52:01.814537"
 }
