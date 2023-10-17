@@ -25,7 +25,7 @@ checkpoint_path_q_adv: "" # results/q_adv/models/q_adv_3s5z_2023-04-28_10-05-29
 evaluate: False # Evaluate model for test_nepisode episodes and quit (no training)
 load_step: 0 # Load model trained on this many timesteps (0 if choose max possible)
 save_replay: False # Saving the replay of the model loaded from checkpoint_path
-local_results_path: "./results/" # Path for local results
+local_results_path: "../results/fgsm" # Path for local results
 video_filename: 
 
 # --- RL hyperparameters ---
@@ -63,3 +63,4 @@ adv_batch_size: 32
 # python src/main.py --config=qmix --env-config=sc2 with env_args.map_name=4m_vs_3m
 # python src/main.py --config=q_adv --env-config=sc2 with env_args.map_name=2s3z
 # python src/main.py --config=vdn --env-config=sc2 with env_args.map_name=6m
+# python main.py --env-config=highway --config=qmix
