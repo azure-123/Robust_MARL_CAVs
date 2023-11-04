@@ -112,7 +112,7 @@ def copy_file_ppo(tar_dir):
     # env1 = '.highway_env/envs/merge_env_v1.py'
     # copy(env1, tar_dir)
 
-    env2 = 'configs/configs_ppo.ini'
+    env2 = ''
     copy(env2, tar_dir)
 
     models = 'MAPPO.py'

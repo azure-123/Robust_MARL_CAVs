@@ -2,7 +2,7 @@ import torch as th
 from torch import nn
 import configparser
 
-config_dir = 'configs/configs_ppo.ini'
+config_dir = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/configs/configs_ppo.ini'
 config = configparser.ConfigParser()
 config.read(config_dir)
 torch_seed = config.getint('MODEL_CONFIG', 'torch_seed')
@@ -18,6 +18,7 @@ from copy import deepcopy
 from single_agent.Memory_common import OnPolicyReplayMemory
 from single_agent.Model_common import ActorNetwork, CriticNetwork
 from common.utils import index_to_one_hot, to_tensor_var, VideoRecorder
+from attack_mappo import tar_attack
 
 
 class MAPPO:
@@ -53,6 +54,7 @@ class MAPPO:
         self.reward_scale = reward_scale
         self.traffic_density = traffic_density
         self.memory = OnPolicyReplayMemory(memory_capacity)
+        self.adv_memory = OnPolicyReplayMemory(memory_capacity)
         self.actor_hidden_size = actor_hidden_size
         self.critic_hidden_size = critic_hidden_size
         self.actor_output_act = actor_output_act
@@ -95,24 +97,27 @@ class MAPPO:
         self.epoch_steps = [0]
 
     # agent interact with the environment to collect experience
-    def interact(self):
+    def interact(self, adv, oppo=None):
         if (self.max_steps is not None) and (self.n_steps >= self.max_steps):
             self.env_state, _ = self.env.reset()
             self.n_steps = 0
         states = []
         actions = []
         rewards = []
+        adv_rewards = []
         done = True
         average_speed = 0
 
         self.n_agents = len(self.env.controlled_vehicles)
-        # print(self.env.controlled_vehicles)
-        # aaa
-        # print(self.n_agents)
+
         # take n steps
         for i in range(self.roll_out_n_steps):
-            states.append(self.env_state)
+            if adv:
+                states.append(self.env_state)
             action = self.exploration_action(self.env_state, self.n_agents)
+            tar_actions = oppo.exploration_action(self.env_state, self.n_agents)
+            
+            adv_states = tar_attack(self.actor, 0.1, states, actions, tar_actions)
 
             next_state, global_reward, done, info = self.env.step(tuple(action))
             actions.append([index_to_one_hot(a, self.action_dim) for a in action])
@@ -123,6 +128,7 @@ class MAPPO:
             elif self.reward_type == "global_R":
                 reward = [global_reward] * self.n_agents
             rewards.append(reward)
+            adv_rewards.append(-reward)
             average_speed += info["average_speed"]
             final_state = next_state
             self.env_state = next_state
@@ -153,7 +159,13 @@ class MAPPO:
             rewards[:, agent_id] = self._discount_reward(rewards[:, agent_id], final_value[agent_id])
 
         rewards = rewards.tolist()
-        self.memory.push(states, actions, rewards)
+        adv_rewards = adv_rewards.tolist()
+        if adv:
+            self.memory.push(adv_states, actions, rewards)
+            self.adv_memory.push(states, tar_actions, adv_rewards)
+        else:
+            self.memory.push(states, actions, rewards)
+        
 
     # train on a roll out batch
     def train(self):
@@ -278,9 +290,9 @@ class MAPPO:
 
             n_agents = len(env.controlled_vehicles)
             rendered_frame = env.render(mode="rgb_array")
-            video_filename = os.path.join(output_dir,
-                                          "testing_episode{}".format(self.n_episodes + 1) + '_{}'.format(i) +
-                                          '.mp4')
+            video_filename = None #os.path.join(output_dir,
+                                        #   "testing_episode{}".format(self.n_episodes + 1) + '_{}'.format(i) +
+                                        #   '.mp4')
             # Init video recording
             if video_filename is not None:
                 print("Recording video to {} ({}x{}x{}@{}fps)".format(video_filename, *rendered_frame.shape,

@@ -20,8 +20,8 @@ def parse_args():
         + easy: globalR
         + seed = 0
     """
-    default_base_dir = "./results/"
-    default_config_dir = 'configs/configs_ppo.ini'
+    default_base_dir = "D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/results/"
+    default_config_dir = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/configs/configs_ppo.ini'
     parser = argparse.ArgumentParser(description=('Train or evaluate policy on RL environment '
                                                   'using mappo'))
     parser.add_argument('--base-dir', type=str, required=False,
@@ -123,6 +123,18 @@ def train(args):
                   max_grad_norm=MAX_GRAD_NORM, test_seeds=test_seeds,
                   episodes_before_train=EPISODES_BEFORE_TRAIN, traffic_density=traffic_density
                   )
+    
+    adv_mappo = MAPPO(env=env, memory_capacity=MEMORY_CAPACITY,
+                  state_dim=state_dim, action_dim=action_dim,
+                  batch_size=BATCH_SIZE, entropy_reg=ENTROPY_REG,
+                  roll_out_n_steps=ROLL_OUT_N_STEPS,
+                  actor_hidden_size=actor_hidden_size, critic_hidden_size=critic_hidden_size,
+                  actor_lr=actor_lr, critic_lr=critic_lr, reward_scale=reward_scale,
+                  target_update_steps=TARGET_UPDATE_STEPS, target_tau=TARGET_TAU,
+                  reward_gamma=reward_gamma, reward_type=reward_type,
+                  max_grad_norm=MAX_GRAD_NORM, test_seeds=test_seeds,
+                  episodes_before_train=EPISODES_BEFORE_TRAIN, traffic_density=traffic_density
+                  )
 
     # load the model if exist
     mappo.load(model_dir, train_mode=True)
@@ -131,7 +143,7 @@ def train(args):
     eval_rewards = []
 
     while mappo.n_episodes < MAX_EPISODES:
-        mappo.interact()
+        mappo.interact(adv=True, oppo=adv_mappo)
         if mappo.n_episodes >= EPISODES_BEFORE_TRAIN:
             mappo.train()
         if mappo.episode_done and ((mappo.n_episodes + 1) % EVAL_INTERVAL == 0):
@@ -158,7 +170,7 @@ def evaluate(args):
         model_dir = args.model_dir + '/models/'
     else:
         raise Exception("Sorry, no pretrained models")
-    config_dir = args.model_dir + '/configs/configs_ppo.ini'
+    config_dir = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/configs/configs_ppo.ini'
     config = configparser.ConfigParser()
     config.read(config_dir)
 

@@ -112,18 +112,18 @@ def copy_file_ppo(tar_dir):
     # env1 = '.highway_env/envs/merge_env_v1.py'
     # copy(env1, tar_dir)
 
-    env2 = 'configs/configs_ppo.ini'
+    env2 = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/configs/configs_ppo.ini'
     copy(env2, tar_dir)
 
-    models = 'MAPPO.py'
+    models = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/MAPPO.py' #'MAPPO.py'
     copy(models, tar_dir)
-    main = 'run_mappo.py'
+    main = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/run_mappo.py'
     copy(main, tar_dir)
-    c1 = 'single_agent/Agent_common.py'
+    c1 = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/single_agent/Agent_common.py'
     copy(c1, tar_dir)
-    c2 = 'single_agent/Memory_common.py'
+    c2 = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/single_agent/Memory_common.py'
     copy(c2, tar_dir)
-    c3 = 'single_agent/Model_common.py'
+    c3 = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/single_agent/Model_common.py'
     copy(c3, tar_dir)
 
 
