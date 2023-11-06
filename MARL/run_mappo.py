@@ -141,21 +141,26 @@ def train(args):
     env.seed = env.config['seed']
     env.unwrapped.seed = env.config['seed']
     eval_rewards = []
+    eval_std = []
 
     while mappo.n_episodes < MAX_EPISODES:
         mappo.interact(adv=True, oppo=adv_mappo)
         if mappo.n_episodes >= EPISODES_BEFORE_TRAIN:
             mappo.train()
+            adv_mappo.train()
         if mappo.episode_done and ((mappo.n_episodes + 1) % EVAL_INTERVAL == 0):
             rewards, _, _, _ = mappo.evaluation(env_eval, dirs['train_videos'], EVAL_EPISODES)
             rewards_mu, rewards_std = agg_double_list(rewards)
-            print("Episode %d, Average Reward %.2f" % (mappo.n_episodes + 1, rewards_mu))
+            print("Episode %d, Average Reward %.2f, Reward std %.2f" % (mappo.n_episodes + 1, rewards_mu, rewards_std))
             eval_rewards.append(rewards_mu)
+            eval_rewards.append(rewards_std)
             # save the model
             mappo.save(dirs['models'], mappo.n_episodes + 1)
+            adv_mappo.save(dirs['adv'], mappo.n_episodes + 1)
 
     # save the model
     mappo.save(dirs['models'], MAX_EPISODES + 2)
+    adv_mappo.save(dirs['adv'], MAX_EPISODES + 2)
 
     plt.figure()
     plt.plot(eval_rewards)

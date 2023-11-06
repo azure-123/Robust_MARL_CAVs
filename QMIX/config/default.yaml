@@ -50,7 +50,7 @@ label: "default_label"
 
 # --- Adversarial params ---
 Number_attack: 3
-attack_method: "fgsm"
+attack_method: "adv_tar"
 epsilon_ball: 0.1
 attack_niters: 20 # If use pgd
 verbose: False

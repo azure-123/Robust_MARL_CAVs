@@ -102,67 +102,122 @@ class MAPPO:
             self.env_state, _ = self.env.reset()
             self.n_steps = 0
         states = []
+        adv_states = []
         actions = []
+        tar_actions = []
         rewards = []
         adv_rewards = []
+        adv_actions = []
         done = True
         average_speed = 0
 
         self.n_agents = len(self.env.controlled_vehicles)
-
-        # take n steps
-        for i in range(self.roll_out_n_steps):
-            if adv:
-                states.append(self.env_state)
-            action = self.exploration_action(self.env_state, self.n_agents)
-            tar_actions = oppo.exploration_action(self.env_state, self.n_agents)
-            
-            adv_states = tar_attack(self.actor, 0.1, states, actions, tar_actions)
-
-            next_state, global_reward, done, info = self.env.step(tuple(action))
-            actions.append([index_to_one_hot(a, self.action_dim) for a in action])
-            self.episode_rewards[-1] += global_reward
-            self.epoch_steps[-1] += 1
-            if self.reward_type == "regionalR":
-                reward = info["regional_rewards"]
-            elif self.reward_type == "global_R":
-                reward = [global_reward] * self.n_agents
-            rewards.append(reward)
-            adv_rewards.append(-reward)
-            average_speed += info["average_speed"]
-            final_state = next_state
-            self.env_state = next_state
-
-            self.n_steps += 1
-            if done:
-                self.env_state, _ = self.env.reset()
-                break
-
-        # discount reward
-        if done:
-            final_value = [0.0] * self.n_agents
-            self.n_episodes += 1
-            self.episode_done = True
-            self.episode_rewards.append(0)
-            self.average_speed[-1] = average_speed / self.epoch_steps[-1]
-            self.average_speed.append(0)
-            self.epoch_steps.append(0)
-        else:
-            self.episode_done = False
-            final_action = self.action(final_state)
-            final_value = self.value(final_state, final_action)
-
-        if self.reward_scale > 0:
-            rewards = np.array(rewards) / self.reward_scale
-
-        for agent_id in range(self.n_agents):
-            rewards[:, agent_id] = self._discount_reward(rewards[:, agent_id], final_value[agent_id])
-
-        rewards = rewards.tolist()
-        adv_rewards = adv_rewards.tolist()
+        oppo.n_agents = self.n_agents
         if adv:
-            self.memory.push(adv_states, actions, rewards)
-            self.adv_memory.push(states, tar_actions, adv_rewards)
+        # take n steps
+            for i in range(self.roll_out_n_steps):
+                states.append(self.env_state)
+                action = self.exploration_action(self.env_state, self.n_agents) # 受害智能体基于正常状态选择动作，用于攻击
+                tar_action = oppo.exploration_action(self.env_state, self.n_agents) # 攻击智能体选择动作
+                adv_state = tar_attack(model=self.actor, epsilon=0.1, states=states, action=action, tar_action=tar_action, opt=self.actor_optimizer, use_cuda=self.use_cuda) # 用攻击智能体的动作攻击受害智能体
+                adv_states.append(adv_state)
+                adv_action = self.exploration_action(adv_state, self.n_agents) # 受害智能体基于正常状态选择动作，用于攻击
+                next_state, global_reward, done, info = self.env.step(tuple(action))
+                actions.append([index_to_one_hot(a, self.action_dim) for a in action])
+                tar_actions.append([index_to_one_hot(tar_a, self.action_dim) for tar_a in tar_action])
+                adv_actions.append([index_to_one_hot(adv_a, self.action_dim) for adv_a in adv_action])
+
+                self.episode_rewards[-1] += global_reward
+                self.epoch_steps[-1] += 1
+                if self.reward_type == "regionalR":
+                    reward = info["regional_rewards"]
+                elif self.reward_type == "global_R":
+                    reward = [global_reward] * self.n_agents
+                rewards.append(reward)
+                adv_rewards.append([-r for r in reward])
+                average_speed += info["average_speed"]
+                final_state = next_state
+                self.env_state = next_state
+
+                self.n_steps += 1
+                if done:
+                    self.env_state, _ = self.env.reset()
+                    break
+
+            # discount reward
+            if done:
+                final_value = [0.0] * self.n_agents
+                adv_final_value = [0.0] * self.n_agents
+                self.n_episodes += 1
+                self.episode_done = True
+                self.episode_rewards.append(0)
+                self.average_speed[-1] = average_speed / self.epoch_steps[-1]
+                self.average_speed.append(0)
+                self.epoch_steps.append(0)
+            else:
+                self.episode_done = False
+                final_action = self.action(final_state)
+                final_value = self.value(final_state, final_action)
+                adv_final_action = oppo.action(final_state)
+                adv_final_value = oppo.value(final_state, adv_final_action)
+
+            if self.reward_scale > 0:
+                rewards = np.array(rewards) / self.reward_scale
+                adv_rewards = np.array(adv_rewards) / self.reward_scale
+
+            for agent_id in range(self.n_agents):
+                rewards[:, agent_id] = self._discount_reward(rewards[:, agent_id], final_value[agent_id])
+                adv_rewards[:, agent_id] = self._discount_reward(adv_rewards[:, agent_id], adv_final_value[agent_id])
+
+            rewards = rewards.tolist()
+            adv_rewards = adv_rewards.tolist()
+        else:
+            for i in range(self.roll_out_n_steps):
+                states.append(self.env_state)
+                action = self.exploration_action(self.env_state, self.n_agents) # 受害智能体基于正常状态选择动作，用于攻击
+
+                next_state, global_reward, done, info = self.env.step(tuple(action))
+                actions.append([index_to_one_hot(a, self.action_dim) for a in action])
+                self.episode_rewards[-1] += global_reward
+                self.epoch_steps[-1] += 1
+                if self.reward_type == "regionalR":
+                    reward = info["regional_rewards"]
+                elif self.reward_type == "global_R":
+                    reward = [global_reward] * self.n_agents
+                rewards.append(reward)
+                average_speed += info["average_speed"]
+                final_state = next_state
+                self.env_state = next_state
+
+                self.n_steps += 1
+                if done:
+                    self.env_state, _ = self.env.reset()
+                    break
+
+            # discount reward
+            if done:
+                final_value = [0.0] * self.n_agents
+                self.n_episodes += 1
+                self.episode_done = True
+                self.episode_rewards.append(0)
+                self.average_speed[-1] = average_speed / self.epoch_steps[-1]
+                self.average_speed.append(0)
+                self.epoch_steps.append(0)
+            else:
+                self.episode_done = False
+                final_action = self.action(final_state)
+                final_value = self.value(final_state, final_action)
+
+            if self.reward_scale > 0:
+                rewards = np.array(rewards) / self.reward_scale
+
+            for agent_id in range(self.n_agents):
+                rewards[:, agent_id] = self._discount_reward(rewards[:, agent_id], final_value[agent_id])
+
+            rewards = rewards.tolist()
+        if adv:
+            self.memory.push(adv_states, adv_actions, rewards)
+            oppo.memory.push(states, tar_actions, adv_rewards)
         else:
             self.memory.push(states, actions, rewards)
         

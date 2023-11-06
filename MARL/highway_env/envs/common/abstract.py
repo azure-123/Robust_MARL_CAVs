@@ -170,7 +170,7 @@ class AbstractEnv(gym.Env):
         """
         raise NotImplementedError
 
-    def reset(self, is_training=True, testing_seeds=0, num_CAV=0) -> Observation:
+    def reset(self, is_training=True, testing_seeds=0, num_CAV=3) -> Observation:
         """
         Reset the environment to it's initial configuration
 
@@ -206,7 +206,7 @@ class AbstractEnv(gym.Env):
         available_actions_dict = {index: value for index, value in enumerate(available_actions)}
         return np.asarray(obs).reshape((len(obs), -1)), available_actions_dict#np.array(available_actions)
 
-    def _reset(self, num_CAV=1) -> None:
+    def _reset(self, num_CAV=3) -> None:
         """
         Reset the scene: roads and vehicles.
 

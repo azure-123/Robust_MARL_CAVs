@@ -151,7 +151,7 @@ class MergeEnv(AbstractEnv):
         return vehicle.crashed \
                or self.steps >= self.config["duration"] * self.config["policy_frequency"]
 
-    def _reset(self, num_CAV=0) -> None:
+    def _reset(self, num_CAV=3) -> None:
         self._make_road()
 
         if self.config["traffic_density"] == 1:
@@ -209,7 +209,7 @@ class MergeEnv(AbstractEnv):
         road.objects.append(Obstacle(road, lbc.position(self.ends[2], 0)))
         self.road = road
 
-    def _make_vehicles(self, num_CAV=4, num_HDV=3) -> None:
+    def _make_vehicles(self, num_CAV=3, num_HDV=3) -> None:
         """
         Populate a road with several vehicles on the highway and on the merging lane, as well as an ego-vehicle.
         :return: the ego-vehicle
