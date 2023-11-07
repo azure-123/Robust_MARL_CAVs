@@ -7,6 +7,7 @@
         "request": "launch",
         "program": "${file}",
         // "args": ["--env-config=highway", "--config=qmix"],
+        "args": ["--option=test"],
         "cwd": "${workspaceFolder}",
         "console": "integratedTerminal",
         "purpose": ["debug-in-terminal"],

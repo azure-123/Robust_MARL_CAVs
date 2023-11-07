@@ -149,11 +149,11 @@ def train(args):
             mappo.train()
             adv_mappo.train()
         if mappo.episode_done and ((mappo.n_episodes + 1) % EVAL_INTERVAL == 0):
-            rewards, _, _, _ = mappo.evaluation(env_eval, dirs['train_videos'], EVAL_EPISODES)
+            rewards, _, _, _ = mappo.evaluation(env_eval, dirs['train_videos'], EVAL_EPISODES, oppo=adv_mappo)
             rewards_mu, rewards_std = agg_double_list(rewards)
             print("Episode %d, Average Reward %.2f, Reward std %.2f" % (mappo.n_episodes + 1, rewards_mu, rewards_std))
             eval_rewards.append(rewards_mu)
-            eval_rewards.append(rewards_std)
+            eval_std.append(rewards_std)
             # save the model
             mappo.save(dirs['models'], mappo.n_episodes + 1)
             adv_mappo.save(dirs['adv'], mappo.n_episodes + 1)
@@ -173,6 +173,7 @@ def train(args):
 def evaluate(args):
     if os.path.exists(args.model_dir):
         model_dir = args.model_dir + '/models/'
+        adv_dir = args.model_dir + '/adv/'
     else:
         raise Exception("Sorry, no pretrained models")
     config_dir = 'D:/college/reinforcement_learning/MARL_CAVs-main/Robust_MARL_CAVs/MARL/configs/configs_ppo.ini'
@@ -232,10 +233,23 @@ def evaluate(args):
                   max_grad_norm=MAX_GRAD_NORM, test_seeds=test_seeds,
                   episodes_before_train=EPISODES_BEFORE_TRAIN, traffic_density=traffic_density
                   )
+    
+    adv_mappo = MAPPO(env=env, memory_capacity=MEMORY_CAPACITY,
+                  state_dim=state_dim, action_dim=action_dim,
+                  batch_size=BATCH_SIZE, entropy_reg=ENTROPY_REG,
+                  roll_out_n_steps=ROLL_OUT_N_STEPS,
+                  actor_hidden_size=actor_hidden_size, critic_hidden_size=critic_hidden_size,
+                  actor_lr=actor_lr, critic_lr=critic_lr, reward_scale=reward_scale,
+                  target_update_steps=TARGET_UPDATE_STEPS, target_tau=TARGET_TAU,
+                  reward_gamma=reward_gamma, reward_type=reward_type,
+                  max_grad_norm=MAX_GRAD_NORM, test_seeds=test_seeds,
+                  episodes_before_train=EPISODES_BEFORE_TRAIN, traffic_density=traffic_density
+                  )
 
     # load the model if exist
     mappo.load(model_dir, train_mode=False)
-    rewards, _, steps, avg_speeds = mappo.evaluation(env, video_dir, len(seeds), is_train=False)
+    adv_mappo.load(adv_dir, train_mode=False)
+    rewards, _, steps, avg_speeds = mappo.evaluation(env, video_dir, len(seeds), is_train=False, oppo=adv_mappo)
 
 
 if __name__ == "__main__":

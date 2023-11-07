@@ -18,7 +18,7 @@ from copy import deepcopy
 from single_agent.Memory_common import OnPolicyReplayMemory
 from single_agent.Model_common import ActorNetwork, CriticNetwork
 from common.utils import index_to_one_hot, to_tensor_var, VideoRecorder
-from attack_mappo import tar_attack
+from attack_mappo import tar_attack, tar_attack_eval
 
 
 class MAPPO:
@@ -317,7 +317,7 @@ class MAPPO:
         return values
 
     # evaluation the learned agent
-    def evaluation(self, env, output_dir, eval_episodes=1, is_train=True):
+    def evaluation(self, env, output_dir, eval_episodes=1, is_train=True, oppo=None):
         rewards = []
         infos = []
         avg_speeds = []
@@ -361,7 +361,10 @@ class MAPPO:
             while not done:
                 step += 1
                 action = self.action(state, n_agents)
-                state, reward, done, info = env.step(action)
+                tar_action = oppo.action(state, n_agents)
+                adv_state = tar_attack_eval(self.actor, 0.1, state, action, tar_action, self.actor_optimizer, self.use_cuda)
+                adv_action = self.action(adv_state, n_agents)
+                state, reward, done, info = env.step(adv_action)
                 avg_speed += info["average_speed"]
                 rendered_frame = env.render(mode="rgb_array")
                 if video_recorder is not None:
